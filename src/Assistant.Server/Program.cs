@@ -1,44 +1,48 @@
-var builder = WebApplication.CreateBuilder(args);
+using Elsa.EntityFrameworkCore.Modules.Management;
+using Elsa.EntityFrameworkCore.Modules.Runtime;
+using Elsa.Extensions;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Services.AddElsa(elsa =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    elsa
+        .UseWorkflowManagement(management => management.UseEntityFrameworkCore())
+        .UseWorkflowRuntime(runtime => runtime.UseEntityFrameworkCore())
+        .UseIdentity(identity =>
+        {
+            identity.TokenOptions = options =>
+                options.SigningKey = "random_secret_956a4d362as1d32as1d6as4d65a4ds6a5s4d56as4d6as46d4as6da";
 
-app.UseHttpsRedirection();
+            identity.UseAdminUserProvider();
+        })
+        .UseDefaultAuthentication(auth => auth.UseAdminApiKey())
+        .UseWorkflowsApi()
+        .UseRealTimeWorkflows()
+        .UseCSharp()
+        .UseHttp()
+        .UseScheduling()
+        .AddActivitiesFrom<Program>()
+        .AddWorkflowsFrom<Program>();
+});
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+builder.Services.AddCors(cors => cors
+    .AddDefaultPolicy(policy => policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .WithExposedHeaders("x-elsa-workflow-instance-id")));
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+builder.Services.AddHealthChecks();
+
+WebApplication app = builder.Build();
+
+app
+    .UseCors()
+    .UseRouting()
+    .UseAuthentication()
+    .UseAuthorization()
+    .UseWorkflowsApi()
+    .UseWorkflows()
+    .UseWorkflowsSignalRHubs();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
