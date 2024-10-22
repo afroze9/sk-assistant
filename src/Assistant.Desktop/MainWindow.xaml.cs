@@ -1,13 +1,9 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+
+using Assistant.Desktop.Services;
+
+using Microsoft.Graph.Models;
+using Microsoft.Identity.Client;
 
 namespace Assistant.Desktop;
 
@@ -16,8 +12,32 @@ namespace Assistant.Desktop;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private readonly IAuthService _authService;
+    private readonly IGraphService _graphService;
+
+    public MainWindow(IAuthService authService, IGraphService graphService)
     {
+        _authService = authService;
+        _graphService = graphService;
         InitializeComponent();
+    }
+
+    private async void LoginButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        AuthenticationResult? result = await _authService.SignInUserAsync();
+        if (result != null)
+        {
+            UserName.Content = result.Account.Username;
+        }
+    }
+
+    private async void MeButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        User? user = await _graphService.GetMeAsync();
+
+        if (user != null)
+        {
+            UserName.Content = user.DisplayName;
+        }
     }
 }

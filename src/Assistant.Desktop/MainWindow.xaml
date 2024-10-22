@@ -7,6 +7,13 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Button Name="LoginButton" Click="LoginButton_OnClick" Grid.Row="0">Login</Button>
+        <Label Name="UserName" Grid.Row="1"></Label>
+        <Button Name="MeButton" Click="MeButton_OnClick" Grid.Row="2">Get Me</Button>
     </Grid>
 </Window>
