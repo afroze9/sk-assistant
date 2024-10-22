@@ -57,9 +57,11 @@ public class Program
                 services.AddSingleton<IGraphService, GraphService>();
                 services
                     .AddOpenAIAudioToText(aiModelOptions.AudioToTextModel, aiModelOptions.Key)
+                    .AddOpenAITextToAudio("tts-1", aiModelOptions.Key)
                     .AddOpenAIChatCompletion(aiModelOptions.ChatCompletionModel, aiModelOptions.Key)
                     .AddKernel();
 
+                services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();

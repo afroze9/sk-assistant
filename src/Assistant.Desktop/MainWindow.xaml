@@ -4,16 +4,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Assistant.Desktop"
+        xmlns:viewModels="clr-namespace:Assistant.Desktop.ViewModels"
+        xmlns:converters="clr-namespace:Assistant.Desktop.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Button Name="LoginButton" Click="LoginButton_OnClick" Grid.Row="0">Login</Button>
-        <Label Name="UserName" Grid.Row="1"></Label>
-        <Button Name="MeButton" Click="MeButton_OnClick" Grid.Row="2">Get Me</Button>
-    </Grid>
+        Title="MainWindow" Height="500" Width="800">
+    <Window.Resources>
+        <converters:RoleToHorizontalAlignmentConverter x:Key="RoleToHorizontalAlignmentConverter" />
+    </Window.Resources>
+    <Window.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Window.DataContext>
+    <StackPanel>
+        <Menu>
+            <MenuItem Header="Account">
+                <MenuItem Header="Login" Name="LoginButton" Click="LoginButton_OnClick" />
+                <MenuItem Header="Logout" Name="LogoutButton" />
+            </MenuItem>
+        </Menu>
+        <ListBox Name="ChatListBox" Height="350" Margin="10" ItemsSource="{Binding ChatMessages}"
+                 HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border HorizontalAlignment="{Binding Role, Converter={StaticResource RoleToHorizontalAlignmentConverter}}">
+                        <Border Padding="10" BorderBrush="Gray" BorderThickness="1">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" MinWidth="250">
+                                <TextBlock Text="{Binding Role}"
+                                           FontWeight="Bold"
+                                           TextAlignment="Left" />
+                                <TextBlock Text="{Binding Message}"
+                                           TextAlignment="Left"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Orientation="Horizontal" Margin="10">
+            <TextBox Name="ChatInputTextBox" Width="600" Margin="0,0,10,0" KeyDown="ChatInputTextBox_OnKeyDown" />
+            <Button Content="Send" Name="SendButton" Click="SendButton_OnClick" />
+        </StackPanel>
+    </StackPanel>
 </Window>
