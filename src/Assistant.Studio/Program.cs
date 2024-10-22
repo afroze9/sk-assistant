@@ -33,6 +33,8 @@ builder.Services.AddSignalR(options =>
 {
     // Set MaximumReceiveMessageSize to handle large workflows.
     options.MaximumReceiveMessageSize = 5 * 1024 * 1000; // 5MB
+    options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
 });
 
 WebApplication app = builder.Build();

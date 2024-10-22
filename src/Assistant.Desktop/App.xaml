@@ -1,9 +1,7 @@
 ﻿<Application x:Class="Assistant.Desktop.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Assistant.Desktop"
-             Startup="App_OnStartup">
+             xmlns:local="clr-namespace:Assistant.Desktop">
     <Application.Resources>
-         
     </Application.Resources>
 </Application>
