@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 using Assistant.Desktop.Configuration;
+using Assistant.Desktop.Plugins;
 using Assistant.Desktop.Services;
 
 using Microsoft.Extensions.Configuration;
@@ -43,11 +44,11 @@ public class Program
             {
                 IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
                 services.AddSingleton(configuration);
+                services.Configure<SKAssistantOptions>(options => configuration.GetSection("SKAssistant").Bind(options));
                 services.Configure<IdentityOptions>(options => configuration.GetSection("Identity").Bind(options));
-
+                
                 IConfigurationSection aiModelSection = configuration.GetRequiredSection("AiModels");
                 services.Configure<AiModelOptions>(options => aiModelSection.Bind(options));
-
                 AiModelOptions aiModelOptions = aiModelSection.Get<AiModelOptions>()!;
 
                 services.AddSingleton<App>();
@@ -61,6 +62,9 @@ public class Program
                     .AddOpenAIChatCompletion(aiModelOptions.ChatCompletionModel, aiModelOptions.Key)
                     .AddKernel();
 
+                services.AddSingleton<KernelPlugin>(sp =>
+                    KernelPluginFactory.CreateFromType<GraphPlugin>(serviceProvider: sp));
+                
                 services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
             })

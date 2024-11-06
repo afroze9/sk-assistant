@@ -1,8 +1,11 @@
-﻿using Azure.Core;
+﻿using System.ComponentModel;
+
+using Azure.Core;
 
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
+using Microsoft.SemanticKernel;
 
 namespace Assistant.Desktop.Services;
 
@@ -33,13 +36,13 @@ public class GraphService : IGraphService
         _graphClient = new GraphServiceClient(tokenCredential);
     }
 
-    public async Task<User?> GetMeAsync()
+    public GraphServiceClient GetGraphClient()
     {
-        return await _graphClient.Me.GetAsync();
+        return _graphClient;
     }
 }
 
 public interface IGraphService
 {
-    Task<User?> GetMeAsync();
+    GraphServiceClient GetGraphClient();
 }
