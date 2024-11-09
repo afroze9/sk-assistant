@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Assistant.Desktop"
         xmlns:wpf="clr-namespace:Microsoft.AspNetCore.Components.WebView.Wpf;assembly=Microsoft.AspNetCore.Components.WebView.Wpf"
         mc:Ignorable="d"
-        Title="SK Assistant" Height="500" Width="800">
+        Title="SK Assistant" MinHeight="500" MinWidth="800" WindowState="Maximized">
     <Grid Background="#0b0b0b">
         <wpf:BlazorWebView HostPage="wwwroot\index.html" Services="{Binding Services}">
             <wpf:BlazorWebView.RootComponents>
