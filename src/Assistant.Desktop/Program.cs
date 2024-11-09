@@ -64,6 +64,8 @@ public class Program
 
                 services.AddSingleton<KernelPlugin>(sp =>
                     KernelPluginFactory.CreateFromType<GraphPlugin>(serviceProvider: sp));
+                services.AddSingleton<KernelPlugin>(sp =>
+                    KernelPluginFactory.CreateFromType<DateTimePlugin>(serviceProvider: sp));
                 
                 services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
