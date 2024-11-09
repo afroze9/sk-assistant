@@ -17,6 +17,8 @@ public class TokenCacheHelper
         tokenCache.SetBeforeAccess(BeforeAccessNotification);
         tokenCache.SetAfterAccess(AfterAccessNotification);
     }
+
+    public static bool CanTryAutoLogin() => File.Exists(CacheFilePath);
     
     private static void BeforeAccessNotification(TokenCacheNotificationArgs args)
     {

@@ -5,7 +5,8 @@ namespace Assistant.Desktop.State;
 public class AppState
 {
     private DesignThemeModes currentThemeMode = DesignThemeModes.Dark;
-
+    private UserState userState = new UserState();
+   
     public DesignThemeModes CurrentThemeMode
     {
         get => currentThemeMode;
@@ -15,28 +16,22 @@ public class AppState
             OnChange?.Invoke();
         }
     }
-    
-    
-    private int currentCount = 0;
-    public int CurrentCount => currentCount;
+
+    public UserState GetUserState() => userState;
+
+    public void SetUserState(string displayName, string email)
+    {
+        userState.UserDisplayName = displayName;
+        userState.UserEmail = email;
+        OnChange?.Invoke();
+    }
     
     public event Action? OnChange;
+}
+
+public class UserState
+{
+    public string UserEmail { get; set; } = string.Empty;
     
-    public void IncrementCount()
-    {
-        currentCount++;
-        OnChange?.Invoke();
-    }
-    
-    public void ResetCount()
-    {
-        currentCount = 0;
-        OnChange?.Invoke();
-    }
-    
-    public void SetThemeMode(DesignThemeModes themeMode)
-    {
-        currentThemeMode = themeMode;
-        OnChange?.Invoke();
-    }
+    public string UserDisplayName { get; set; } = string.Empty;
 }

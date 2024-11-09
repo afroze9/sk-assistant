@@ -1,7 +1,14 @@
-﻿@using Microsoft.AspNetCore.Components.Routing
-
+﻿@using Assistant.Desktop.Models
+@using Assistant.Desktop.Plugins
+@using Assistant.Desktop.Services
+@using Microsoft.AspNetCore.Components.Routing
 @using Assistant.Desktop.Shared
 @using Assistant.Desktop.State
+@using Microsoft.Graph.Models
+@using Microsoft.Identity.Client
+@inject IAuthService AuthService
+@inject IGraphService GraphService 
+
 <FluentDesignSystemProvider>
     <FluentDesignTheme Mode="@AppState.CurrentThemeMode" StorageName="theme">
         <Router AppAssembly="@typeof(App).Assembly">
@@ -26,8 +33,22 @@
     [Inject]
     private AppState AppState { get; set; } = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         AppState.OnChange += StateHasChanged;
+        
+        if (TokenCacheHelper.CanTryAutoLogin())
+        {
+            AuthenticationResult? result = await AuthService.SignInUserAsync();
+            if (result != null)
+            {
+                User? userInfo = await GraphService.GetGraphClient().Me.GetAsync();
+                if (userInfo != null)
+                {
+                    AppState.SetUserState(userInfo.DisplayName ?? "N/A", result.Account.Username);
+                }
+            }
+        }
+        
     }
 }

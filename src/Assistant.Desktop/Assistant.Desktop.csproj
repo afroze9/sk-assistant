@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <RootNamespace>Assistant.Desktop</RootNamespace>
+    <ApplicationIcon>Assets/sk-icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

@@ -38,7 +38,19 @@ public static class ChatMessageModelMapper
             _ => ChatMessageRole.User,
         };
     }
-    
+
+    public static ChatMessageRole ToChatMessageRole(this Entities.ChatMessage.ChatMessageRole role)
+    {
+        return role switch
+        {
+            Entities.ChatMessage.ChatMessageRole.User => ChatMessageRole.User,
+            Entities.ChatMessage.ChatMessageRole.Assistant => ChatMessageRole.Assistant,
+            Entities.ChatMessage.ChatMessageRole.Tool => ChatMessageRole.Tool,
+            Entities.ChatMessage.ChatMessageRole.System => ChatMessageRole.System,
+            _ => ChatMessageRole.User,
+        };
+    }
+
     public static ChatHistory ToChatHistory(this List<ChatMessageViewModel> chatMessageViewModels)
     {
         ChatHistory history = new ChatHistory();
@@ -60,6 +72,30 @@ public static class ChatMessageModelMapper
             }
         }
         
+        return history;
+    }
+
+    public static ChatHistory ToChatHistory(this List<Entities.ChatMessage> chatMessages)
+    {
+        ChatHistory history = new ChatHistory();
+        
+        foreach (Entities.ChatMessage chatMessage in chatMessages)
+        {
+            ChatMessageRole role = chatMessage.Role.ToChatMessageRole();
+            switch (role)
+            {
+                case ChatMessageRole.System:
+                    history.AddSystemMessage(chatMessage.Content);
+                    break;
+                case ChatMessageRole.User:
+                    history.AddUserMessage(chatMessage.Content);
+                    break;
+                case ChatMessageRole.Assistant:
+                    history.AddAssistantMessage(chatMessage.Content);
+                    break;
+            }
+        }
+
         return history;
     }
 }

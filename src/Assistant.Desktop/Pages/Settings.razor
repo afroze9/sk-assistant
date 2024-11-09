@@ -1,19 +1,38 @@
 ﻿@page "/settings"
+@using Assistant.Desktop.Services
 @using Assistant.Desktop.State
+@using Microsoft.Identity.Client
+@inject IAuthService AuthService
 
 <PageTitle>Settings</PageTitle>
 
 <FluentCard>
-    <h2>Settings</h2>
-    <FluentRadioGroup Name="theme" @bind-Value=@AppState.CurrentThemeMode Label="Theme">
-        <FluentRadio Value="@DesignThemeModes.Dark">Dark</FluentRadio>
-        <FluentRadio Value="@DesignThemeModes.Light">Light</FluentRadio>
-        <FluentRadio Value="@DesignThemeModes.System">System</FluentRadio>
-    </FluentRadioGroup>
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentLabel Typo="Typography.H2">Settings</FluentLabel>
+        <FluentRadioGroup Name="theme" @bind-Value=@AppState.CurrentThemeMode Label="Theme">
+            <FluentRadio Value="@DesignThemeModes.Dark">Dark</FluentRadio>
+            <FluentRadio Value="@DesignThemeModes.Light">Light</FluentRadio>
+            <FluentRadio Value="@DesignThemeModes.System">System</FluentRadio>
+        </FluentRadioGroup>
+    </FluentStack>
+    <FluentDivider Orientation="Orientation.Horizontal" Style="margin-top: 1rem"/>
+    <FluentStack Orientation="Orientation.Vertical" Style="margin-top: 1rem">
+        <FluentLabel Typo="Typography.H2">User</FluentLabel>
+        <FluentLabel>@AppState.GetUserState().UserDisplayName</FluentLabel>
+        <FluentButton OnClick="LoginAsync">Login</FluentButton>
+    </FluentStack>
 </FluentCard>
 
 @code
 {
-    [Inject]
-    private AppState AppState { get; set; } = default!;
+    [Inject] private AppState AppState { get; set; } = default!;
+
+    public async Task LoginAsync()
+    {
+        AuthenticationResult? result = await AuthService.SignInUserAsync();
+        if (result != null)
+        {
+            Console.WriteLine("Logged in as: " + result.Account.Username);
+        }
+    }
 }
