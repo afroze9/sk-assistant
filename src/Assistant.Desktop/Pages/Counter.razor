@@ -1,0 +1,21 @@
+﻿@page "/counter"
+
+<PageTitle>Counter</PageTitle>
+
+<FluentCard>
+    <h2>Counter</h2>
+    <p>Current count: @currentCount</p>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="IncrementCount">
+        Increment
+    </FluentButton>
+</FluentCard>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.SemanticKernel;
 
 using Serilog;
@@ -74,7 +75,8 @@ public partial class App : Application
                 services.AddSingleton<MainWindow>();
                 
                 services.AddWpfBlazorWebView();
-                services.AddSingleton<CounterState>();
+                services.AddSingleton<AppState>();
+                services.AddFluentUIComponents();
 
                 // Enable Developer tools in Debug mode
 #if DEBUG

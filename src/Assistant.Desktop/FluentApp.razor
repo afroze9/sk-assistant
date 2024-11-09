@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+
+@using Assistant.Desktop.Shared
+@using Assistant.Desktop.State
+<FluentDesignSystemProvider>
+    <FluentDesignTheme Mode="@AppState.CurrentThemeMode">
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
+            </Found>
+            <NotFound>
+                <PageTitle>Not found</PageTitle>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <FluentCard>
+                        <p>Sorry, there's nothing at this address.</p>
+                    </FluentCard>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </FluentDesignTheme>
+</FluentDesignSystemProvider>
+
+@code
+{
+    [Inject]
+    private AppState AppState { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+}

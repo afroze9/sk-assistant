@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -17,6 +17,9 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1"/>
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2"/>
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.10.3" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Emoji" Version="4.6.0" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.10.3" />
     <PackageReference Include="Microsoft.Graph" Version="5.61.0"/>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.66.0"/>
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.24.1"/>

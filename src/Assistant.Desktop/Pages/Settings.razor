@@ -1,0 +1,19 @@
+﻿@page "/settings"
+@using Assistant.Desktop.State
+
+<PageTitle>Settings</PageTitle>
+
+<FluentCard>
+    <h2>Settings</h2>
+    <FluentRadioGroup Name="theme" @bind-Value=@AppState.CurrentThemeMode Label="Theme">
+        <FluentRadio Value="@DesignThemeModes.Dark">Dark</FluentRadio>
+        <FluentRadio Value="@DesignThemeModes.Light">Light</FluentRadio>
+        <FluentRadio Value="@DesignThemeModes.System">System</FluentRadio>
+    </FluentRadioGroup>
+</FluentCard>
+
+@code
+{
+    [Inject]
+    private AppState AppState { get; set; } = default!;
+}
