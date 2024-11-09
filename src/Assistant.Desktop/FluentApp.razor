@@ -3,7 +3,7 @@
 @using Assistant.Desktop.Shared
 @using Assistant.Desktop.State
 <FluentDesignSystemProvider>
-    <FluentDesignTheme Mode="@AppState.CurrentThemeMode">
+    <FluentDesignTheme Mode="@AppState.CurrentThemeMode" StorageName="theme">
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
                 <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>

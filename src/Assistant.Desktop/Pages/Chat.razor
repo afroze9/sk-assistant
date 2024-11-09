@@ -8,7 +8,7 @@
 <FluentStack Orientation="Orientation.Horizontal">
     <FluentStack Orientation="Orientation.Vertical" Style="height: 100vh; width: 256px">
         <FluentStack Orientation="Orientation.Horizontal" Style="padding: 12px">
-            <FluentButton Appearance="Appearance.Accent" IconStart="NewChatIcon()" Style="width: 100%">New Chat</FluentButton>
+            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size24.ChatAdd())" Style="width: 100%">New Chat</FluentButton>
         </FluentStack>
         <FluentStack Orientation="Orientation.Vertical" Style="overflow-y: auto; overflow-x: hidden;">
             <FluentNavMenu Width="240" Style="padding-bottom: 12px">
@@ -16,27 +16,6 @@
                 <FluentDivider Style="width: 100%;" Role="DividerRole.Presentation"></FluentDivider>
                 <FluentNavLink>Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1</FluentNavLink>
                 <FluentNavLink>Chat2</FluentNavLink>
-                <FluentLabel Style="margin-top: 12px">Group</FluentLabel>
-                <FluentDivider Style="width: 100%" Role="DividerRole.Presentation"></FluentDivider>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
-                <FluentNavLink>Chat3</FluentNavLink>
             </FluentNavMenu>
         </FluentStack>
     </FluentStack>
@@ -45,10 +24,13 @@
             @foreach (var message in Messages)
             {
                 <FluentCard Class="@GetCardClass(message.Role)">
-                    <FluentIcon Value="@GetRoleIcon(message.Role)"></FluentIcon>
-                    <p>
+                    <FluentStack Orientation="Orientation.Horizontal" Style="gap: 1rem">
+                        <FluentIcon Value="@GetRoleIcon(message.Role)"></FluentIcon>
+                        <FluentLabel>@message.Role.ToString()</FluentLabel>
+                    </FluentStack>
+                    <FluentLabel Typo="Typography.Body" Style="margin-top: 1rem">
                         @message.Content
-                    </p>
+                    </FluentLabel>
                 </FluentCard>
             }
         </div>
@@ -62,13 +44,24 @@
                 Resize="TextAreaResize.Vertical"
                 Rows="6"
                 Class="message-input"/>
+            <div class="input-buttons">
+                <FluentButton
+                    IconStart="@(new Icons.Regular.Size24.Mic())"
+                    OnClick="ToggleVoiceInput"
+                    Appearance="Appearance.Lightweight"
+                    Title="Voice Input"/>
+                <FluentButton
+                    IconStart="@(new Icons.Regular.Size24.Send())"
+                    OnClick="SendMessage"
+                    Appearance="Appearance.Lightweight"
+                    Title="Send Message"/>
+            </div>
         </FluentStack>
     </FluentStack>
 </FluentStack>
 
 <style>
     .messages-container { 
-        flex-grow: 1;
         overflow-y: auto;
         padding: 1rem;
         scroll-behavior: smooth;
@@ -88,12 +81,20 @@
     }
     
     .input-container {
+        margin-top: auto;
         padding: 1rem;
     }
     
     .message-input {
         width: 100%;
         margin-bottom: 0.5rem;
+    }
+
+    .input-buttons {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.5rem;
     }
 
 </style>
@@ -134,14 +135,17 @@
         await ScrollToBottom();
         await ClearInput();
     }
+    
+    public async Task ToggleVoiceInput()
+    {
+        Console.WriteLine("Voice input not implemented yet");
+    }
 
     private async Task ClearInput()
     {
         CurrentMessage = string.Empty;
         StateHasChanged();
     }
-
-    private static Icon NewChatIcon() => new Icons.Regular.Size24.ChatAdd();
 
     private string GetCardClass(ChatMessage.ChatMessageRole role)
     {
@@ -164,70 +168,8 @@
     {
         Messages.Add(new ChatMessage()
         {
-            Content = "Hello",
+            Content = "You are an efficient assistant and respond with only whats needed and nothing else",
             Role = ChatMessage.ChatMessageRole.System,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "Hi",
-            Role = ChatMessage.ChatMessageRole.User,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I'm here too!",
-            Role = ChatMessage.ChatMessageRole.Assistant,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I did something",
-            Role = ChatMessage.ChatMessageRole.Tool,
-        });
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I'm here too!",
-            Role = ChatMessage.ChatMessageRole.Assistant,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I did something",
-            Role = ChatMessage.ChatMessageRole.Tool,
-        });
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I'm here too!",
-            Role = ChatMessage.ChatMessageRole.Assistant,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I did something",
-            Role = ChatMessage.ChatMessageRole.Tool,
-        });
-        Messages.Add(new ChatMessage()
-        {
-            Content = "'m here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!'m here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!'m here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!I'm here too!",
-            Role = ChatMessage.ChatMessageRole.Assistant,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I did something",
-            Role = ChatMessage.ChatMessageRole.Tool,
-        });
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I'm here too!",
-            Role = ChatMessage.ChatMessageRole.Assistant,
-        });
-
-        Messages.Add(new ChatMessage()
-        {
-            Content = "I did something",
-            Role = ChatMessage.ChatMessageRole.Tool,
         });
     }
 }
