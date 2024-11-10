@@ -8,4 +8,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Message> Messages { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<KnowledgeCategory> KnowledgeCategories { get; set; }
 }

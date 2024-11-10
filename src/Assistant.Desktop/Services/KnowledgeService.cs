@@ -1,5 +1,8 @@
-﻿using Assistant.Desktop.Entities.Vector;
+﻿using Assistant.Desktop.Data;
+using Assistant.Desktop.Entities;
+using Assistant.Desktop.Entities.Vector;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Embeddings;
 
@@ -8,10 +11,22 @@ using Qdrant.Client.Grpc;
 
 namespace Assistant.Desktop.Services;
 
-public class KnowledgeService(IVectorStore vectorStore, ITextEmbeddingGenerationService textEmbeddingGenerationService, QdrantClient client) : IKnowledgeService
+public class KnowledgeService(
+    IVectorStore vectorStore, 
+    ITextEmbeddingGenerationService textEmbeddingGenerationService, 
+    QdrantClient client,
+    ApplicationDbContext context) : IKnowledgeService
 {
-    public async Task AddKnowledgeAsync(Knowledge knowledge, CancellationToken cancellationToken = default)
+    public async Task SaveKnowledgeAsync(Knowledge knowledge, CancellationToken cancellationToken = default)
     {
+        if (!await context.KnowledgeCategories.AnyAsync(
+                x => x.Name == knowledge.Category,
+                cancellationToken: cancellationToken))
+        {
+            await context.KnowledgeCategories.AddAsync(new KnowledgeCategory() { Name = knowledge.Category, }, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);
+        }
+        
         IVectorStoreRecordCollection<ulong, Knowledge> collection = vectorStore.GetCollection<ulong, Knowledge>(nameof(Knowledge));
         await collection.CreateCollectionIfNotExistsAsync(cancellationToken);
 
@@ -32,7 +47,7 @@ public class KnowledgeService(IVectorStore vectorStore, ITextEmbeddingGeneration
 
         return searchResults.Results
             .ToBlockingEnumerable(cancellationToken: cancellationToken)
-            .Where(x => x.Score > 0.5)
+            .Where(x => x.Score > 0.25)
             .Select(x => x.Record).ToList();
     }
     
@@ -67,11 +82,17 @@ public class KnowledgeService(IVectorStore vectorStore, ITextEmbeddingGeneration
 
         return knowledgeList;
     }
+    
+    public async Task<List<string>> GetKnowledgeCategories()
+    {
+        return await context.KnowledgeCategories.Select(x => x.Name).ToListAsync();
+    }
 }
 
 public interface IKnowledgeService
 {
-    Task AddKnowledgeAsync(Knowledge knowledge, CancellationToken cancellationToken = default);
+    Task SaveKnowledgeAsync(Knowledge knowledge, CancellationToken cancellationToken = default);
     Task<List<Knowledge>> GetKnowledgeListAsync(CancellationToken cancellationToken = default);
     Task<List<Knowledge>> SearchKnowledgeAsync(string query, CancellationToken cancellationToken = default);
+    Task<List<string>> GetKnowledgeCategories();
 }

@@ -29,7 +29,7 @@
 
     private async Task SaveKnowledge(MouseEventArgs obj)
     {
-        await KnowledgeService.AddKnowledgeAsync(new Knowledge()
+        await KnowledgeService.SaveKnowledgeAsync(new Knowledge()
         {
             Category = "personal info",
             Description = "My name is Afroze and I'm a solution architect",

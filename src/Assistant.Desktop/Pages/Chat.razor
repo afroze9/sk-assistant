@@ -348,7 +348,7 @@
         {
             AppState.AddMessageToCurrentConversation(new Message
             {
-                Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
+                Content = SystemPrompt,
                 Role = Message.ChatMessageRole.System,
             });
         }
@@ -373,7 +373,7 @@
             [
                 new Message
                 {
-                    Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
+                    Content = SystemPrompt,
                     Role = Message.ChatMessageRole.System,
                 }
             ],
@@ -381,4 +381,6 @@
         };
         AppState.SetCurrentConversation(newConversation);
     }
+
+    private const string SystemPrompt = "You are an efficient assistant and respond with only whats needed and nothing else. Try and save important information to the knowledgebase as much as possible. And use it to help answer questions where needed.";
 }

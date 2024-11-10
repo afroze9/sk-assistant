@@ -3,6 +3,7 @@ using System.Windows;
 
 using Assistant.Desktop.Configuration;
 using Assistant.Desktop.Data;
+using Assistant.Desktop.Entities.Vector;
 using Assistant.Desktop.Plugins;
 using Assistant.Desktop.Services;
 using Assistant.Desktop.State;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Data;
 
 using Qdrant.Client;
 
@@ -77,6 +79,11 @@ public partial class App : Application
                     KernelPluginFactory.CreateFromType<DateTimePlugin>(serviceProvider: sp));
                 services.AddSingleton<KernelPlugin>(sp =>
                     KernelPluginFactory.CreateFromType<KnowledgePlugin>(serviceProvider: sp));
+
+                services.AddSingleton<ITextSearchResultMapper, DataModelTextSearchResultMapper>();
+                services.AddSingleton<ITextSearchStringMapper, DataModelTextSearchStringMapper>();
+                services.AddVectorStoreTextSearch<Knowledge>();
+                
                 services.AddSingleton<QdrantClient>(sp => new QdrantClient("localhost"));
                 services.AddQdrantVectorStore("localhost");
 
@@ -105,6 +112,7 @@ public partial class App : Application
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             dbContext.Database.EnsureCreated();
+            dbContext.Database.Migrate();
         }
 
         var mainWindow = new MainWindow(host.Services);
@@ -117,5 +125,32 @@ public partial class App : Application
         await host.StopAsync();
         host.Dispose();
         base.OnExit(e);
+    }
+}
+
+
+internal class DataModelTextSearchStringMapper : ITextSearchStringMapper
+{
+    /// <inheritdoc />
+    public string MapFromResultToString(object result)
+    {
+        if (result is Knowledge dataModel)
+        {
+            return dataModel.Description;
+        }
+        throw new ArgumentException("Invalid result type.");
+    }
+}
+
+internal class DataModelTextSearchResultMapper : ITextSearchResultMapper
+{
+    /// <inheritdoc />
+    public TextSearchResult MapFromResultToTextSearchResult(object result)
+    {
+        if (result is Knowledge dataModel)
+        {
+            return new TextSearchResult(value: dataModel.Description) { Name = dataModel.Category, Link = string.Empty };
+        }
+        throw new ArgumentException("Invalid result type.");
     }
 }
