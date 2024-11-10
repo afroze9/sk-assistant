@@ -2,10 +2,12 @@
 using System.Windows;
 
 using Assistant.Desktop.Configuration;
+using Assistant.Desktop.Data;
 using Assistant.Desktop.Plugins;
 using Assistant.Desktop.Services;
 using Assistant.Desktop.State;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -78,6 +80,9 @@ public partial class App : Application
                 services.AddSingleton<QdrantClient>(sp => new QdrantClient("localhost"));
                 services.AddQdrantVectorStore("localhost");
 
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
                 services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<IKnowledgeService, KnowledgeService>();
@@ -96,7 +101,11 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        base.OnStartup(e);
+        using (var scope = host.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.EnsureCreated();
+        }
 
         var mainWindow = new MainWindow(host.Services);
         mainWindow.Show();

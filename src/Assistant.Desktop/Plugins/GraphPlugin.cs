@@ -59,8 +59,8 @@ public class GraphPlugin
                 eventModels.Add(new EventModel()
                 {
                     Subject = @event.Subject,
-                    Start = @event.Start,
-                    End = @event.End
+                    Start = @event.Start?.DateTime != null ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(@event.Start.DateTime), TimeZoneInfo.Local) : null,
+                    End = @event.End?.DateTime != null ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(@event.End.DateTime), TimeZoneInfo.Local) : null,
                 });
             }
         }

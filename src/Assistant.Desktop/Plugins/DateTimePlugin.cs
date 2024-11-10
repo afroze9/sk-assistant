@@ -11,16 +11,16 @@ public class DateTimePlugin
     [return: Description("Current datetime in utc")]
     public DateTime GetCurrentDateTime()
     {
-        return DateTime.UtcNow;
+        return DateTime.Now;
     }
     
-    [KernelFunction(name: "get_current_timezone")]
-    [Description("Get current timezone")]
-    [return: Description("Current timezone")]
-    public string GetCurrentTimezone()
-    {
-        return TimeZoneInfo.Local.DisplayName;
-    }
+    // [KernelFunction(name: "get_current_timezone")]
+    // [Description("Get current timezone")]
+    // [return: Description("Current timezone")]
+    // public string GetCurrentTimezone()
+    // {
+    //     return TimeZoneInfo.Local.DisplayName;
+    // }
     
     [KernelFunction(name: "get_duration_in_minutes")]
     [Description("Get duration between start and end datetime in minutes")]

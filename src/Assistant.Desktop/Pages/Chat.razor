@@ -1,31 +1,45 @@
 ﻿@page "/"
 @using Microsoft.JSInterop
-@using Markdig
 @using Message = Assistant.Desktop.Entities.Message
 @using Assistant.Desktop.Components
+@using Assistant.Desktop.Data
+@using Assistant.Desktop.Entities
 @using Assistant.Desktop.State
+@using Microsoft.EntityFrameworkCore
 @inject IJSRuntime JS
 @inject Services.IAiService AiService
+@inject ApplicationDbContext Context
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Chat</PageTitle>
 
 <FluentStack Orientation="Orientation.Horizontal">
-    <FluentStack Orientation="Orientation.Vertical" Style="height: 100vh; width: 256px">
-        <FluentStack Orientation="Orientation.Horizontal" Style="padding: 12px">
-            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size24.ChatAdd())" Style="width: 100%">New Chat</FluentButton>
+    <FluentStack Orientation="Orientation.Vertical" Style="height: 100vh; width: 300px">
+        <FluentStack Orientation="Orientation.Horizontal" Style="padding: 1rem">
+            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size24.ChatAdd())" Style="width: 100%" OnClick="NewChat">New Chat</FluentButton>
         </FluentStack>
         <FluentStack Orientation="Orientation.Vertical" Style="overflow-y: auto; overflow-x: hidden;">
-            <FluentNavMenu Width="240" Style="padding-bottom: 12px">
-                <FluentLabel>Group</FluentLabel>
-                <FluentDivider Style="width: 100%;" Role="DividerRole.Presentation"></FluentDivider>
-                <FluentNavLink>Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1Chat1</FluentNavLink>
-                <FluentNavLink>Chat2</FluentNavLink>
+            <FluentNavMenu Width="286" Style="padding: 1rem">
+                @foreach (var group in GetConversationGroups())
+                {
+                    <FluentLabel>@group.Key</FluentLabel>
+                    @foreach (var conversation in group.Value)
+                    {
+                        <FluentNavLink
+                            OnClick="() => LoadConversation(conversation.Id)"
+                            Icon="GetNavIcon(conversation.Id)"
+                            Tooltip="@conversation.Title">
+                            @conversation.Title
+                        </FluentNavLink>
+                    }
+
+                    <FluentDivider Style="width: 100%; margin-bottom: 1rem" Role="DividerRole.Presentation"></FluentDivider>
+                }
             </FluentNavMenu>
         </FluentStack>
     </FluentStack>
     <FluentStack Orientation="Orientation.Vertical" Style="height: 100vh; width: 100%">
         <div class="messages-container" @ref="messagesRef">
-            @foreach (var message in Messages)
+            @foreach (var message in AppState.GetCurrentConversation()?.Messages ?? [])
             {
                 <FluentCard Class="@GetCardClass(message.Role)">
                     <FluentStack Orientation="Orientation.Horizontal" Style="gap: 1rem">
@@ -38,7 +52,7 @@
                     }
                     else
                     {
-                        <FluentLabel Typo="Typography.Body" Style="margin-top: 1rem">
+                        <FluentLabel Typo="Typography.Body">
                             @message.Content
                         </FluentLabel>
                     }
@@ -52,7 +66,7 @@
                         <FluentLabel>Thinking</FluentLabel>
                     </FluentStack>
                     <FluentLabel Style="margin-top: 1rem">
-                    <FluentSkeleton Height="30px" Width="100%" Shimmer="true"></FluentSkeleton>
+                        <FluentSkeleton Height="30px" Width="100%" Shimmer="true"></FluentSkeleton>
                     </FluentLabel>
                 </FluentCard>
             }
@@ -97,6 +111,8 @@
         width: 80%;
         gap: 1rem;
         animation: message-fade-in 0.3s ease-out;
+        display: flex;
+        flex-direction: column;
     }
     
     .message.user {
@@ -124,18 +140,10 @@
 
 @code
 {
-    [Inject]
-    private AppState AppState { get; set; } = default!;
+    [Inject] private AppState AppState { get; set; } = default!;
     private ElementReference messagesRef;
-    private List<Message> Messages { get; set; } = [];
     private bool IsLoading { get; set; } = false;
     private string CurrentMessage { get; set; } = "";
-
-    private string ToMarkdown(string input)
-    {
-        var html = Markdown.ToHtml(input);
-        return html;
-    }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
@@ -157,7 +165,7 @@
             return;
         }
 
-        Messages.Add(new Message()
+        AppState.AddMessageToCurrentConversation(new Message()
         {
             Content = CurrentMessage,
             Role = Message.ChatMessageRole.User,
@@ -167,8 +175,27 @@
         await ClearInput();
 
         await ToggleLoading(true);
+
+        Conversation? currentConv = AppState.GetCurrentConversation();
+        if (currentConv is { Messages: [{ Role: Message.ChatMessageRole.System }, { Role: Message.ChatMessageRole.User }] })
+        {
+            if (!await Context.Conversations.AnyAsync(x => x.Id == currentConv.Id))
+            {
+                currentConv.Title = await GetConversationTitle(currentConv.Messages.Last().Content);
+                await Context.Conversations.AddAsync(currentConv);
+                await Context.SaveChangesAsync();
+                AppState.SetCurrentConversation(currentConv);
+                AppState.AddCurrentConversationToList(currentConv);
+            }
+        }
+
         await CallAiService();
         await ToggleLoading(false);
+    }
+
+    private async Task<string> GetConversationTitle(string message)
+    {
+        return (await AiService.GenerateChatTitleAsync(message)).Content;
     }
 
     private async Task ToggleLoading(bool isLoading)
@@ -177,10 +204,29 @@
         StateHasChanged();
     }
 
-    public async Task CallAiService()
+    private async Task CallAiService()
     {
-        Message response = await AiService.GenerateAsync(Messages);
-        Messages.Add(response);
+        var currentConversation = AppState.GetCurrentConversation();
+        if (currentConversation == null)
+        {
+            return;
+        }
+
+        List<Message>? messages = currentConversation.Messages;
+        if (messages.Count == 0)
+        {
+            return;
+        }
+
+        Message response = await AiService.GenerateAsync(messages);
+        AppState.AddMessageToCurrentConversation(response);
+
+        Conversation? convToUpdate = await Context.Conversations.FindAsync(currentConversation.Id);
+        if (convToUpdate != null)
+        {
+            await Context.SaveChangesAsync();
+        }
+
         StateHasChanged();
         await ScrollToBottom();
     }
@@ -201,6 +247,16 @@
         return $"message {role.ToString().ToLower()}";
     }
 
+    private Icon GetNavIcon(string conversationId)
+    {
+        if (AppState.GetCurrentConversation()?.Id == conversationId)
+        {
+            return new Icons.Regular.Size20.ArrowCircleRight();
+        }
+
+        return new Icons.Regular.Size20.LineHorizontal1Dashes();
+    }
+
     private Icon GetRoleIcon(Message.ChatMessageRole role)
     {
         return role switch
@@ -213,16 +269,7 @@
         };
     }
 
-    protected override void OnInitialized()
-    {
-        Messages.Add(new Message()
-        {
-            Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
-            Role = Message.ChatMessageRole.System,
-        });
-    }
-
-    public bool IsMarkdown(string input)
+    private bool IsMarkdown(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
         {
@@ -242,4 +289,96 @@
         return false;
     }
 
+    private Dictionary<string, List<Conversation>> GetConversationGroups()
+    {
+        Dictionary<string, List<Conversation>> groups = new();
+
+        List<Conversation> conversations = AppState.Conversations.OrderByDescending(x => x.CreatedAt).ToList();
+        if (conversations.Count == 0)
+        {
+            return groups;
+        }
+
+        DateTime today = DateTime.Today;
+        DateTime yesterday = today.AddDays(-1);
+        DateTime lastWeek = today.AddDays(-7);
+        DateTime lastMonth = today.AddDays(-30);
+
+        List<Conversation> todayConversations = conversations.Where(x => x.CreatedAt.Date == today).ToList();
+        List<Conversation> yesterdayConversations = conversations.Where(x => x.CreatedAt.Date == yesterday).ToList();
+        List<Conversation> lastWeekConversations = conversations.Where(x => x.CreatedAt.Date > lastWeek && x.CreatedAt.Date < yesterday).ToList();
+        List<Conversation> lastMonthConversations = conversations.Where(x => x.CreatedAt.Date > lastMonth && x.CreatedAt.Date < lastWeek).ToList();
+
+        if (todayConversations.Any()) groups.Add("Today", todayConversations);
+        if (yesterdayConversations.Any()) groups.Add("Yesterday", yesterdayConversations);
+        if (lastWeekConversations.Any()) groups.Add("Last 7 days", lastWeekConversations);
+        if (lastMonthConversations.Any()) groups.Add("Last 30 days", lastMonthConversations);
+
+        return groups;
+    }
+
+    private async Task LoadConversation(string conversationId)
+    {
+        if (AppState.GetCurrentConversation()?.Id == conversationId)
+        {
+            return;
+        }
+
+        Conversation? dbConversation = await Context.Conversations
+            .Where(x => x.Id == conversationId)
+            .Include(x => x.Messages)
+            .FirstOrDefaultAsync();
+
+        if (dbConversation == null)
+        {
+            Console.WriteLine($"Could not find conversation with id {conversationId}");
+            return;
+        }
+
+        dbConversation.Messages = dbConversation.Messages.OrderBy(x => x.CreatedAt).ToList();
+
+        AppState.SetCurrentConversation(dbConversation);
+        StateHasChanged();
+        await ScrollToBottom();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AppState.GetCurrentConversation()?.Messages.Count == 0)
+        {
+            AppState.AddMessageToCurrentConversation(new Message
+            {
+                Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
+                Role = Message.ChatMessageRole.System,
+            });
+        }
+
+        // Load conversations
+        if (AppState.Conversations.Count == 0)
+        {
+            List<Conversation> conversations = await Context.Conversations
+                .Where(x => x.CreatedAt >= DateTime.Today.AddDays(-30))
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+            AppState.SetConversations(conversations);
+        }
+    }
+
+    private void NewChat()
+    {
+        Conversation newConversation = new Conversation()
+        {
+            Messages =
+            [
+                new Message
+                {
+                    Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
+                    Role = Message.ChatMessageRole.System,
+                }
+            ],
+            Title = "New Chat",
+        };
+        AppState.SetCurrentConversation(newConversation);
+    }
 }

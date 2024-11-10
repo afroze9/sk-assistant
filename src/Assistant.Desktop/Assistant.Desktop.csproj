@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Elsa.EntityFrameworkCore.Sqlite" Version="3.2.3" />
     <PackageReference Include="Markdig" Version="0.38.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="8.0.93"/>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0"/>
