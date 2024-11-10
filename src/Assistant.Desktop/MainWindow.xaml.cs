@@ -1,7 +1,5 @@
 ﻿using System.Windows;
 
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Assistant.Desktop;
 
 public partial class MainWindow : Window

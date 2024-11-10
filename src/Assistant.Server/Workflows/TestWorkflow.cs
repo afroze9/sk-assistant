@@ -9,7 +9,7 @@ public class TestWorkflow : IWorkflow
 {
     public ValueTask BuildAsync(
         IWorkflowBuilder builder,
-        CancellationToken cancellationToken = new CancellationToken())
+        CancellationToken cancellationToken = new())
     {
         builder
             .Root = new Sequence { Activities = { new HelloActivity(), } };

@@ -1,0 +1,38 @@
+﻿@page "/memory"
+@using Assistant.Desktop.Entities.Vector
+@using Assistant.Desktop.Services
+@inject IKnowledgeService KnowledgeService
+
+<PageTitle>Memory</PageTitle>
+
+<FluentCard>
+    <FluentLabel Typo="Typography.H1">Memory</FluentLabel>
+    <FluentLabel>Coming Soon...</FluentLabel>
+    <FluentButton OnClick="SaveKnowledge">Test</FluentButton>
+
+    <FluentDataGrid Items="@Knowledges">
+        <PropertyColumn Property="@(p => p.Category)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.Description)" Sortable="true" />
+    </FluentDataGrid>
+</FluentCard>
+
+@code
+{
+    private IQueryable<Knowledge> Knowledges { get; set; } = new List<Knowledge>().AsQueryable();
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<Knowledge> knowledges = await KnowledgeService.GetKnowledgeListAsync();
+        Knowledges = knowledges.AsQueryable();
+        StateHasChanged();
+    }
+
+    private async Task SaveKnowledge(MouseEventArgs obj)
+    {
+        await KnowledgeService.AddKnowledgeAsync(new Knowledge()
+        {
+            Category = "personal info",
+            Description = "My name is Afroze and I'm a solution architect",
+        });
+    }
+}

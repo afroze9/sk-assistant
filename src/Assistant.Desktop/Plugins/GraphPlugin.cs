@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel;
-
 using Assistant.Desktop.Models;
 using Assistant.Desktop.Services;
-
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.SemanticKernel;
@@ -11,11 +9,11 @@ namespace Assistant.Desktop.Plugins;
 
 public class GraphPlugin
 {
-    private readonly IGraphService _graphService;
+    private readonly IGraphClientFactory _graphClientFactory;
 
-    public GraphPlugin(IGraphService graphService)
+    public GraphPlugin(IGraphClientFactory graphClientFactory)
     {
-        _graphService = graphService;
+        _graphClientFactory = graphClientFactory;
     }
     
     [KernelFunction(name:"get_me")]
@@ -23,7 +21,7 @@ public class GraphPlugin
     [return:Description("Information about the current user")]
     public async Task<UserModel?> GetMeAsync()
     {
-        GraphServiceClient graphClient =  _graphService.GetGraphClient();
+        GraphServiceClient graphClient =  _graphClientFactory.GetGraphClient();
         User? user = await graphClient.Me.GetAsync();
         if(user != null)
         {
@@ -43,7 +41,7 @@ public class GraphPlugin
     [return:Description("Information about the current user's calendar")]
     public async Task<List<EventModel>> GetMyCalendar(DateTime startDateTime, DateTime endDateTime)
     {
-        GraphServiceClient graphClient =  _graphService.GetGraphClient();
+        GraphServiceClient graphClient =  _graphClientFactory.GetGraphClient();
 
         EventCollectionResponse? events = await graphClient.Me
             .CalendarView
@@ -75,7 +73,7 @@ public class GraphPlugin
     [return:Description("True if the reminder was set successfully, false otherwise")]
     public async Task<bool> SetReminderAsync(string subject, DateTime startDateTime, int durationInMinutes = 15, int reminderMinutesBeforeStart = 15)
     {
-        GraphServiceClient graphClient = _graphService.GetGraphClient();
+        GraphServiceClient graphClient = _graphClientFactory.GetGraphClient();
 
         var @event = new Event
         {
@@ -105,11 +103,4 @@ public class GraphPlugin
             return false;
         }
     }
-}
-
-public class EventModel
-{
-    public string? Subject { get; set; }
-    public DateTimeTimeZone? Start { get; set; }
-    public DateTimeTimeZone? End { get; set; }
 }

@@ -1,19 +1,14 @@
-﻿using System.ComponentModel;
-
-using Azure.Core;
-
+﻿using Azure.Core;
 using Microsoft.Graph;
-using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
-using Microsoft.SemanticKernel;
 
 namespace Assistant.Desktop.Services;
 
-public class GraphService : IGraphService
+public class GraphClientFactory : IGraphClientFactory
 {
     private readonly GraphServiceClient _graphClient;
 
-    public GraphService(IAuthService authService)
+    public GraphClientFactory(IAuthService authService)
     {
         TokenCredential tokenCredential = DelegatedTokenCredential.Create(
             getToken: (_, _) =>
@@ -42,7 +37,7 @@ public class GraphService : IGraphService
     }
 }
 
-public interface IGraphService
+public interface IGraphClientFactory
 {
     GraphServiceClient GetGraphClient();
 }

@@ -1,7 +1,9 @@
 ﻿@page "/"
-@using Assistant.Desktop.Entities
 @using Microsoft.JSInterop
-@using Microsoft.SemanticKernel.Services
+@using Markdig
+@using Message = Assistant.Desktop.Entities.Message
+@using Assistant.Desktop.Components
+@using Assistant.Desktop.State
 @inject IJSRuntime JS
 @inject Services.IAiService AiService
 
@@ -28,10 +30,29 @@
                 <FluentCard Class="@GetCardClass(message.Role)">
                     <FluentStack Orientation="Orientation.Horizontal" Style="gap: 1rem">
                         <FluentIcon Value="@GetRoleIcon(message.Role)"></FluentIcon>
-                        <FluentLabel>@message.Role.ToString()</FluentLabel>
+                        <FluentLabel>@(message.Role == Message.ChatMessageRole.User ? AppState.GetUserState().UserDisplayName : message.Role.ToString())</FluentLabel>
                     </FluentStack>
-                    <FluentLabel Typo="Typography.Body" Style="margin-top: 1rem">
-                        @message.Content
+                    @if (IsMarkdown(message.Content))
+                    {
+                        <MarkdownSection Content="@message.Content"/>
+                    }
+                    else
+                    {
+                        <FluentLabel Typo="Typography.Body" Style="margin-top: 1rem">
+                            @message.Content
+                        </FluentLabel>
+                    }
+                </FluentCard>
+            }
+            @if (IsLoading)
+            {
+                <FluentCard Class="@GetCardClass(Message.ChatMessageRole.System)">
+                    <FluentStack Orientation="Orientation.Horizontal" Style="gap: 1rem">
+                        <FluentIcon Value="@GetRoleIcon(Message.ChatMessageRole.System)"></FluentIcon>
+                        <FluentLabel>Thinking</FluentLabel>
+                    </FluentStack>
+                    <FluentLabel Style="margin-top: 1rem">
+                    <FluentSkeleton Height="30px" Width="100%" Shimmer="true"></FluentSkeleton>
                     </FluentLabel>
                 </FluentCard>
             }
@@ -103,10 +124,18 @@
 
 @code
 {
+    [Inject]
+    private AppState AppState { get; set; } = default!;
     private ElementReference messagesRef;
-    private List<ChatMessage> Messages { get; set; } = [];
-
+    private List<Message> Messages { get; set; } = [];
+    private bool IsLoading { get; set; } = false;
     private string CurrentMessage { get; set; } = "";
+
+    private string ToMarkdown(string input)
+    {
+        var html = Markdown.ToHtml(input);
+        return html;
+    }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
@@ -128,26 +157,34 @@
             return;
         }
 
-        Messages.Add(new ChatMessage()
+        Messages.Add(new Message()
         {
             Content = CurrentMessage,
-            Role = ChatMessage.ChatMessageRole.User,
+            Role = Message.ChatMessageRole.User,
         });
 
         await ScrollToBottom();
         await ClearInput();
 
+        await ToggleLoading(true);
         await CallAiService();
+        await ToggleLoading(false);
+    }
+
+    private async Task ToggleLoading(bool isLoading)
+    {
+        IsLoading = isLoading;
+        StateHasChanged();
     }
 
     public async Task CallAiService()
     {
-        ChatMessage response = await AiService.GenerateAsync(Messages);
+        Message response = await AiService.GenerateAsync(Messages);
         Messages.Add(response);
         StateHasChanged();
         await ScrollToBottom();
     }
-    
+
     public async Task ToggleVoiceInput()
     {
         Console.WriteLine("Voice input not implemented yet");
@@ -159,29 +196,50 @@
         StateHasChanged();
     }
 
-    private string GetCardClass(ChatMessage.ChatMessageRole role)
+    private string GetCardClass(Message.ChatMessageRole role)
     {
         return $"message {role.ToString().ToLower()}";
     }
 
-    private Icon GetRoleIcon(ChatMessage.ChatMessageRole role)
+    private Icon GetRoleIcon(Message.ChatMessageRole role)
     {
         return role switch
         {
-            ChatMessage.ChatMessageRole.User => new Icons.Regular.Size24.Person(),
-            ChatMessage.ChatMessageRole.Assistant => new Icons.Regular.Size24.Bot(),
-            ChatMessage.ChatMessageRole.System => new Icons.Regular.Size24.Desktop(),
-            ChatMessage.ChatMessageRole.Tool => new Icons.Regular.Size24.WrenchScrewdriver(),
+            Message.ChatMessageRole.User => new Icons.Regular.Size24.Person(),
+            Message.ChatMessageRole.Assistant => new Icons.Regular.Size24.Bot(),
+            Message.ChatMessageRole.System => new Icons.Regular.Size24.Desktop(),
+            Message.ChatMessageRole.Tool => new Icons.Regular.Size24.WrenchScrewdriver(),
             _ => new Icons.Regular.Size24.Warning(),
         };
     }
 
     protected override void OnInitialized()
     {
-        Messages.Add(new ChatMessage()
+        Messages.Add(new Message()
         {
-            Content = "You are an efficient assistant and respond with only whats needed and nothing else",
-            Role = ChatMessage.ChatMessageRole.System,
+            Content = "You are an efficient assistant and respond with only whats needed and nothing else. Save and get information from the knowledge base as needed",
+            Role = Message.ChatMessageRole.System,
         });
     }
+
+    public bool IsMarkdown(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        // Simple checks for common Markdown syntax
+        string[] markdownIndicators = { "#", "*", "-", "_", "`", ">", "[", "]", "(", ")", "!", "```" };
+        foreach (var indicator in markdownIndicators)
+        {
+            if (input.Contains(indicator))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

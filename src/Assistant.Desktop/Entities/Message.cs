@@ -1,6 +1,6 @@
 ﻿namespace Assistant.Desktop.Entities;
 
-public class ChatMessage
+public class Message
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -14,12 +14,4 @@ public class ChatMessage
         Assistant = 2,
         Tool = 3,
     }
-}
-
-public class Conversation
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public required DateTime CreatedAt { get; set; } = DateTime.Now;
-    public List<ChatMessage> Messages { get; set; } = [];
-    public string? Title { get; set; }
 }

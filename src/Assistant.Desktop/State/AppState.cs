@@ -5,7 +5,7 @@ namespace Assistant.Desktop.State;
 public class AppState
 {
     private DesignThemeModes currentThemeMode = DesignThemeModes.Dark;
-    private UserState userState = new UserState();
+    private UserState userState = new();
    
     public DesignThemeModes CurrentThemeMode
     {

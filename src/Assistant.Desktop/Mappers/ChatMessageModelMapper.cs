@@ -1,85 +1,28 @@
-﻿using Assistant.Desktop.ViewModels;
-
+﻿using Assistant.Desktop.Entities;
 using Microsoft.SemanticKernel.ChatCompletion;
-
 using OpenAI.Chat;
 
 namespace Assistant.Desktop.Mappers;
 
 public static class ChatMessageModelMapper
 {
-    public static List<ChatMessage> ToChatMessageList(this List<ChatMessageViewModel> chatMessageViewModels)
-    {
-        return chatMessageViewModels.Select(x => x.ToChatMessage()).ToList();
-    }
-    
-    public static ChatMessage ToChatMessage(this ChatMessageViewModel chatMessage)
-    {
-        ChatMessageRole role = chatMessage.Role.ToChatMessageRole();
-
-        return role switch
-        {
-            ChatMessageRole.User => new UserChatMessage(chatMessage.Message),
-            ChatMessageRole.Assistant => new AssistantChatMessage(chatMessage.Message),
-            ChatMessageRole.Tool => new ToolChatMessage(chatMessage.Message),
-            ChatMessageRole.System => new SystemChatMessage(chatMessage.Message),
-            _ => new UserChatMessage(chatMessage.Message),
-        };
-    }
-    
-    public static ChatMessageRole ToChatMessageRole(this string role)
+    private static ChatMessageRole ToChatMessageRole(this Message.ChatMessageRole role)
     {
         return role switch
         {
-            "User" => ChatMessageRole.User,
-            "Assistant" => ChatMessageRole.Assistant,
-            "Tool" => ChatMessageRole.Tool,
-            "System" => ChatMessageRole.System,
+            Message.ChatMessageRole.User => ChatMessageRole.User,
+            Message.ChatMessageRole.Assistant => ChatMessageRole.Assistant,
+            Message.ChatMessageRole.Tool => ChatMessageRole.Tool,
+            Message.ChatMessageRole.System => ChatMessageRole.System,
             _ => ChatMessageRole.User,
         };
     }
 
-    public static ChatMessageRole ToChatMessageRole(this Entities.ChatMessage.ChatMessageRole role)
+    public static ChatHistory ToChatHistory(this IEnumerable<Message> chatMessages)
     {
-        return role switch
-        {
-            Entities.ChatMessage.ChatMessageRole.User => ChatMessageRole.User,
-            Entities.ChatMessage.ChatMessageRole.Assistant => ChatMessageRole.Assistant,
-            Entities.ChatMessage.ChatMessageRole.Tool => ChatMessageRole.Tool,
-            Entities.ChatMessage.ChatMessageRole.System => ChatMessageRole.System,
-            _ => ChatMessageRole.User,
-        };
-    }
+        ChatHistory history = new();
 
-    public static ChatHistory ToChatHistory(this List<ChatMessageViewModel> chatMessageViewModels)
-    {
-        ChatHistory history = new ChatHistory();
-
-        foreach (ChatMessageViewModel chatMessageViewModel in chatMessageViewModels)
-        {
-            ChatMessageRole role = chatMessageViewModel.Role.ToChatMessageRole();
-            switch (role)
-            {
-                case ChatMessageRole.System:
-                    history.AddSystemMessage(chatMessageViewModel.Message);
-                    break;
-                case ChatMessageRole.User:
-                    history.AddUserMessage(chatMessageViewModel.Message);
-                    break;
-                case ChatMessageRole.Assistant:
-                    history.AddAssistantMessage(chatMessageViewModel.Message);
-                    break;
-            }
-        }
-        
-        return history;
-    }
-
-    public static ChatHistory ToChatHistory(this List<Entities.ChatMessage> chatMessages)
-    {
-        ChatHistory history = new ChatHistory();
-        
-        foreach (Entities.ChatMessage chatMessage in chatMessages)
+        foreach (Message chatMessage in chatMessages)
         {
             ChatMessageRole role = chatMessage.Role.ToChatMessageRole();
             switch (role)

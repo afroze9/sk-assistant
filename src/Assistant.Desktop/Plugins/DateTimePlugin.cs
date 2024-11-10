@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-
 using Microsoft.Graph.Models;
 using Microsoft.SemanticKernel;
 

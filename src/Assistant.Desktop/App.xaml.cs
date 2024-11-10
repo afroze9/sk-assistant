@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.SemanticKernel;
 
+using Qdrant.Client;
+
 using Serilog;
 using Serilog.Core;
 
@@ -59,20 +61,26 @@ public partial class App : Application
                 services.AddSingleton<MainWindow>();
 
                 services.AddSingleton<IAuthService, AuthService>();
-                services.AddSingleton<IGraphService, GraphService>();
+                services.AddSingleton<IGraphClientFactory, GraphClientFactory>();
                 services
                     .AddOpenAIAudioToText(aiModelOptions.AudioToTextModel, aiModelOptions.Key)
                     .AddOpenAITextToAudio("tts-1", aiModelOptions.Key)
                     .AddOpenAIChatCompletion(aiModelOptions.ChatCompletionModel, aiModelOptions.Key)
+                    .AddOpenAITextEmbeddingGeneration(aiModelOptions.EmbeddingGenerationModel, aiModelOptions.Key)
                     .AddKernel();
 
                 services.AddSingleton<KernelPlugin>(sp =>
                     KernelPluginFactory.CreateFromType<GraphPlugin>(serviceProvider: sp));
                 services.AddSingleton<KernelPlugin>(sp =>
                     KernelPluginFactory.CreateFromType<DateTimePlugin>(serviceProvider: sp));
+                services.AddSingleton<KernelPlugin>(sp =>
+                    KernelPluginFactory.CreateFromType<KnowledgePlugin>(serviceProvider: sp));
+                services.AddSingleton<QdrantClient>(sp => new QdrantClient("localhost"));
+                services.AddQdrantVectorStore("localhost");
 
                 services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
+                services.AddSingleton<IKnowledgeService, KnowledgeService>();
                 
                 services.AddWpfBlazorWebView();
                 services.AddSingleton<AppState>();

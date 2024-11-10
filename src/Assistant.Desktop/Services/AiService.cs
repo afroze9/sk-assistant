@@ -1,64 +1,31 @@
 ﻿using Assistant.Desktop.Entities;
 using Assistant.Desktop.Mappers;
-using Assistant.Desktop.ViewModels;
-
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
-using ChatMessageContent = Microsoft.SemanticKernel.ChatMessageContent;
-
 namespace Assistant.Desktop.Services;
 
-public class AiService : IAiService
+public class AiService(Kernel kernel) : IAiService
 {
-    private readonly Kernel _kernel;
-
-    public AiService(Kernel kernel)
+    public async Task<Message> GenerateAsync(List<Message> messages)
     {
-        _kernel = kernel;
-    }
-
-    [Obsolete("Use GenerateAsync(List<ChatMessage>) instead")]
-    public async Task<ChatMessageViewModel> GenerateAsync(List<ChatMessageViewModel> chatMessages)
-    {
-        IChatCompletionService completionService = _kernel.GetRequiredService<IChatCompletionService>();
-        OpenAIPromptExecutionSettings openAiPromptExecutionSettings = new ()
-        {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-        };
-
-        ChatHistory history = chatMessages.ToChatHistory();
-
-        ChatMessageContent result = await completionService.GetChatMessageContentAsync(
-            history,
-            executionSettings: openAiPromptExecutionSettings,
-            kernel: _kernel);
-
-        return new ChatMessageViewModel
-        {
-            Message = result?.Content ?? "Error trying to get chat completion", Role = "Assistant",
-        };
-    }
-
-    public async Task<ChatMessage> GenerateAsync(List<ChatMessage> chatMessages)
-    {
-        IChatCompletionService completionService = _kernel.GetRequiredService<IChatCompletionService>();
+        IChatCompletionService completionService = kernel.GetRequiredService<IChatCompletionService>();
         OpenAIPromptExecutionSettings openAiPromptExecutionSettings = new ()
         {
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
         };
         
-        ChatHistory history = chatMessages.ToChatHistory();
+        ChatHistory history = messages.Where(x => x.Role != Message.ChatMessageRole.Tool).ToChatHistory();
         
         ChatMessageContent result = await completionService.GetChatMessageContentAsync(
             history,
             executionSettings: openAiPromptExecutionSettings,
-            kernel: _kernel);
+            kernel: kernel);
 
-        return new ChatMessage
+        return new Message
         {
-            Role = ChatMessage.ChatMessageRole.Assistant,
+            Role = Message.ChatMessageRole.Assistant,
             Content = result.Content ?? "Error trying to get chat completion",
         };
     }
@@ -66,7 +33,5 @@ public class AiService : IAiService
 
 public interface IAiService
 {
-    [Obsolete("Use GenerateAsync(List<ChatMessage>) instead")]
-    Task<ChatMessageViewModel> GenerateAsync(List<ChatMessageViewModel> chatMessages);
-    Task<ChatMessage> GenerateAsync(List<ChatMessage> chatMessages);
+    Task<Message> GenerateAsync(List<Message> messages);
 }

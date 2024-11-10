@@ -1,5 +1,6 @@
 ﻿using Assistant.Desktop.Configuration;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 
@@ -8,13 +9,14 @@ namespace Assistant.Desktop.Services;
 public class AuthService : IAuthService
 {
     private readonly IdentityOptions _identityOptions;
-
     private readonly IPublicClientApplication _publicClientApplication;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthenticationResult? AuthResult { get; set; }
 
-    public AuthService(IOptions<IdentityOptions> identityOptions)
+    public AuthService(IOptions<IdentityOptions> identityOptions, ILogger<AuthService> logger)
     {
+        _logger = logger;
         _identityOptions = identityOptions.Value;
         _publicClientApplication = PublicClientApplicationBuilder
             .Create(_identityOptions.ClientId)
@@ -51,6 +53,7 @@ public class AuthService : IAuthService
             }
             catch (Exception ex)
             {
+                _logger.LogWarning("An error occurred while signing in the user: {Message}", ex.Message);
                 return null;
             }
         }
