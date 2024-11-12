@@ -4,11 +4,13 @@
 @using Assistant.Desktop.Components
 @using Assistant.Desktop.Data
 @using Assistant.Desktop.Entities
+@using Assistant.Desktop.Services
 @using Assistant.Desktop.State
 @using Microsoft.EntityFrameworkCore
 @inject IJSRuntime JS
 @inject Services.IAiService AiService
 @inject ApplicationDbContext Context
+@inject ITranscriptionService TranscriptionService
 
 <PageTitle>Chat</PageTitle>
 
@@ -83,14 +85,16 @@
                 Class="message-input"/>
             <div class="input-buttons">
                 <FluentButton
-                    IconStart="@(new Icons.Regular.Size24.Mic())"
+                    IconStart="GetMicIcon()"
                     OnClick="ToggleVoiceInput"
                     Appearance="Appearance.Lightweight"
+                    Disabled="IsProcessingAudio"
                     Title="Voice Input"/>
                 <FluentButton
                     IconStart="@(new Icons.Regular.Size24.Send())"
                     OnClick="SendMessage"
                     Appearance="Appearance.Lightweight"
+                    Disabled="@(CurrentMessage.Length == 0)"
                     Title="Send Message"/>
             </div>
         </FluentStack>
@@ -143,6 +147,8 @@
     [Inject] private AppState AppState { get; set; } = default!;
     private ElementReference messagesRef;
     private bool IsLoading { get; set; } = false;
+    private bool IsRecording { get; set; } = false;
+    private bool IsProcessingAudio { get; set; } = false;
     private string CurrentMessage { get; set; } = "";
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
@@ -233,7 +239,43 @@
 
     public async Task ToggleVoiceInput()
     {
-        Console.WriteLine("Voice input not implemented yet");
+        if (IsRecording)
+        {
+            await StopRecording();
+            IsRecording = false;
+        }
+        else
+        {
+            await StartRecording();
+            IsRecording = true;
+        }
+        StateHasChanged();
+    }
+    
+    private async Task StartRecording()
+    {
+        IsRecording = true;
+        StateHasChanged();
+        // Add your logic to start recording audio here
+        await JS.InvokeVoidAsync("startRecording");
+    }
+
+    private async Task StopRecording()
+    {
+        IsRecording = false;
+        StateHasChanged();
+        string data = await JS.InvokeAsync<string>("stopRecording");
+        await ProcessRecordedAudio(data);
+    }
+
+    private async Task ProcessRecordedAudio(string data)
+    {
+        IsProcessingAudio = true;
+
+        await TranscriptionService.SaveAsync(data);
+        IsProcessingAudio = false;
+        StateHasChanged();
+        // Sample function to process the recorded audio
     }
 
     private async Task ClearInput()
@@ -268,6 +310,8 @@
             _ => new Icons.Regular.Size24.Warning(),
         };
     }
+
+    private Icon GetMicIcon() => IsRecording ? new Icons.Filled.Size24.Mic() : new Icons.Regular.Size24.Mic();
 
     private bool IsMarkdown(string input)
     {

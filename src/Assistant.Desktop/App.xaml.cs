@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Net.Http.Headers;
 using System.Windows;
 
 using Assistant.Desktop.Configuration;
@@ -93,6 +94,12 @@ public partial class App : Application
                 services.AddSingleton<IAiService, AiService>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<IKnowledgeService, KnowledgeService>();
+                
+                services.AddHttpClient<ITranscriptionService, TranscriptionService>("TranscriptionClient", client =>
+                {
+                    client.BaseAddress = new Uri("http://localhost:8000"); // Replace with your base URL
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                });
                 
                 services.AddWpfBlazorWebView();
                 services.AddSingleton<AppState>();

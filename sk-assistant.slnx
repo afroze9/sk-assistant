@@ -1,0 +1,7 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src\Assistant.Desktop\Assistant.Desktop.csproj" Type="Classic C#" />
+    <Project Path="src\Assistant.Server\Assistant.Server.csproj" Type="Classic C#" />
+    <Project Path="src\Assistant.Studio\Assistant.Studio.csproj" Type="Classic C#" />
+  </Folder>
+</Solution>
